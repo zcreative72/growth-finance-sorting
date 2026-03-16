@@ -11,10 +11,11 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; touch-action: none; user-select: none; }
         
+        /* 4-Column Grid for Desktop */
         #image-pool {
             display: grid;
             grid-template-columns: repeat(1, minmax(0, 1fr));
-            gap: 1.5rem;
+            gap: 1rem;
             width: 100%;
         }
         @media (min-width: 768px) { #image-pool { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -26,29 +27,29 @@
             width: 100%;
             border: 1px solid #e2e8f0;
             background: white;
-            padding: 10px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgb(0 0 0 / 0.05);
         }
         
         .draggable-item:active { cursor: grabbing; transform: scale(1.02); z-index: 50; }
-        .drop-zone { transition: all 0.3s ease; min-height: 200px; display: flex; flex-direction: column; align-items: center; border-radius: 1rem; }
-        .drag-over { background-color: white !important; border-color: #3b82f6 !important; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .drop-zone { transition: all 0.3s ease; min-height: 180px; display: flex; flex-direction: column; align-items: center; border-radius: 1rem; }
+        .drag-over { background-color: white !important; border-color: #3b82f6 !important; transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); }
         
         @keyframes success-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); background-color: #f0fdf4; } 100% { transform: scale(1); } }
         .correct-drop { animation: success-pulse 0.4s ease-out; }
         
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
         .incorrect-drop { animation: shake 0.3s ease-in-out; border-color: #ef4444 !important; }
 
-        .dropped-style { width: 95% !important; margin: 8px auto; box-shadow: none; border: 1px solid #cbd5e1; pointer-events: none; }
+        .dropped-style { width: 90% !important; margin: 4px auto; box-shadow: none; border: 1px solid #cbd5e1; pointer-events: none; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
 
     <div class="max-w-6xl mx-auto">
         <div class="flex justify-between items-center mb-6">
-            <span id="round-counter" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full font-bold text-sm shadow-sm">Round 1 of 4</span>
+            <span id="round-counter" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full font-bold text-sm">Round 1 of 4</span>
             <button id="mute-btn" class="flex items-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-bold text-sm transition-colors">
                 <span id="mute-icon">🔊</span> <span id="mute-text">Sound: ON</span>
             </button>
@@ -56,17 +57,13 @@
 
         <header class="text-center mb-8">
             <h1 class="text-4xl font-extrabold text-slate-800 tracking-tight">Financial Models Sorting</h1>
-            <div class="flex justify-center gap-4 mt-4">
-                <span class="bg-white border border-slate-200 text-slate-700 px-4 py-1 rounded-full font-bold text-sm shadow-sm">
-                    Accuracy: <span id="accuracy-display" class="text-indigo-600">100</span>%
-                </span>
-                <span class="bg-white border border-slate-200 text-slate-700 px-4 py-1 rounded-full font-bold text-sm shadow-sm">
-                    Attempts: <span id="attempts-display" class="text-indigo-600">0</span>
-                </span>
+            <div class="flex justify-center gap-4 mt-4 text-sm font-bold">
+                <span class="bg-white border px-4 py-1 rounded-full shadow-sm">Accuracy: <span id="accuracy-display" class="text-indigo-600">100</span>%</span>
+                <span class="bg-white border px-4 py-1 rounded-full shadow-sm">Attempts: <span id="attempts-display" class="text-indigo-600">0</span></span>
             </div>
         </header>
 
-        <div id="image-pool-container" class="bg-slate-200/50 border-2 border-dashed border-slate-300 rounded-2xl p-6 mb-10 min-h-[200px]">
+        <div id="image-pool-container" class="bg-slate-200/50 border-2 border-dashed border-slate-300 rounded-2xl p-6 mb-10 min-h-[150px]">
             <div id="image-pool"></div>
         </div>
 
@@ -77,17 +74,18 @@
         <div id="round-modal" class="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-sm mx-4 hidden">
             <div class="text-5xl mb-4">🎉</div>
             <h3 class="text-2xl font-bold text-slate-800">Round Complete!</h3>
-            <button id="next-btn" class="mt-6 w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl">Next Round</button>
+            <button id="next-btn" class="mt-6 w-full py-3 bg-indigo-600 text-white font-bold rounded-xl">Next Round</button>
         </div>
         <div id="final-modal" class="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-sm mx-4 hidden">
             <div class="text-5xl mb-4">🏆</div>
             <h3 class="text-2xl font-bold text-slate-800">Mastery Achieved!</h3>
             <p id="final-stats" class="text-slate-600 mt-2 font-semibold"></p>
-            <button onclick="location.reload()" class="mt-6 w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl">Play Again</button>
+            <button onclick="location.reload()" class="mt-6 w-full py-3 bg-emerald-600 text-white font-bold rounded-xl">Play Again</button>
         </div>
     </div>
 
     <script>
+        // UPDATED: All links now explicitly use HTTPS
         const items = [
             { id: 'i1', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-30-inbox_orig.png', cat: 'payout-loan' },
             { id: 'i2', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-44-inbox_orig.png', cat: 'exponential' },
@@ -120,8 +118,7 @@
         let shuffled = [...items].sort(() => Math.random() - 0.5);
         let polySynth, failSynth;
 
-        const muteBtn = document.getElementById('mute-btn');
-        muteBtn.onclick = () => {
+        document.getElementById('mute-btn').onclick = () => {
             isMuted = !isMuted;
             document.getElementById('mute-icon').innerText = isMuted ? '🔇' : '🔊';
             document.getElementById('mute-text').innerText = isMuted ? 'Sound: OFF' : 'Sound: ON';
@@ -184,6 +181,7 @@
             document.getElementById('accuracy-display').innerText = Math.round((corrects / attempts) * 100);
         }
 
+        // Setup categories
         const catContainer = document.getElementById('categories');
         categories.forEach(c => {
             const zone = document.createElement('div');
@@ -193,3 +191,4 @@
             zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
             zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
             zone.addEventListener('drop', handleDrop);
+            catContainer.appendChild(zone);
