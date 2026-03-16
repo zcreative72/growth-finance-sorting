@@ -85,31 +85,31 @@
     <script>
         // Exact matches to the filenames in your GitHub folder
         const items = [
-            { id: 'i1', src: 'Compound 1.png', cat: 'compound' },
-            { id: 'i2', src: 'Compound 2.png', cat: 'compound' },
-            { id: 'i3', src: 'Compound 3.png', cat: 'compound' },
-            { id: 'i4', src: 'Exponential 1.png', cat: 'exponential' },
-            { id: 'i5', src: 'Exponential 2.png', cat: 'exponential' },
-            { id: 'i6', src: 'Exponential 3.png', cat: 'exponential' },
-            { id: 'i7', src: 'Grow 1.png', cat: 'grow' },
-            { id: 'i8', src: 'Linear 1.png', cat: 'linear' },
-            { id: 'i9', src: 'Linear 2.png', cat: 'linear' },
-            { id: 'i10', src: 'Linear 3.png', cat: 'linear' },
-            { id: 'i11', src: 'Linear 4.png', cat: 'linear' },
-            { id: 'i12', src: 'Logistic 1.png', cat: 'logistic' },
-            { id: 'i13', src: 'Shrink 1.png', cat: 'shrink' },
-            { id: 'i14', src: 'Shrink 2.png', cat: 'shrink' },
-            { id: 'i15', src: 'Shrink 3.png', cat: 'shrink' },
-            { id: 'i16', src: 'Shrink 4.png', cat: 'shrink' }
+            { id: 'i1', src: 'Compound 1.png', cat: 'Compound Interest' },
+            { id: 'i2', src: 'Compound 2.png', cat: 'Compound Interest' },
+            { id: 'i3', src: 'Compound 3.png', cat: 'Compound Interest' },
+            { id: 'i4', src: 'Exponential 1.png', cat: 'Exponential Growth' },
+            { id: 'i5', src: 'Exponential 2.png', cat: 'Exponential Growth' },
+            { id: 'i6', src: 'Exponential 3.png', cat: 'Exponential Growth' },
+            { id: 'i7', src: 'Grow 1.png', cat: 'Savings Annuity' },
+            { id: 'i8', src: 'Linear 1.png', cat: 'Linear Growth' },
+            { id: 'i9', src: 'Linear 2.png', cat: 'Linear Growth' },
+            { id: 'i10', src: 'Linear 3.png', cat: 'Linear Growth' },
+            { id: 'i11', src: 'Linear 4.png', cat: 'Linear Growth' },
+            { id: 'i12', src: 'Logistic 1.png', cat: 'Logistic Growth' },
+            { id: 'i13', src: 'Shrink 1.png', cat: 'Loan/Payout Annuity' },
+            { id: 'i14', src: 'Shrink 2.png', cat: 'Loan/Payout Annuity' },
+            { id: 'i15', src: 'Shrink 3.png', cat: 'Loan/Payout Annuity' },
+            { id: 'i16', src: 'Shrink 4.png', cat: 'Loan/Payout Annuity' }
         ];
 
         const categories = [
-            { id: 'linear', name: 'Linear', color: 'blue', img: 'Linear Formula.png' },
-            { id: 'exponential', name: 'Exponential', color: 'amber', img: 'Exponential Formula.png' },
-            { id: 'logistic', name: 'Logistic', color: 'purple', img: 'Logistic Formula.png' },
+            { id: 'linear', name: 'Linear Growth', color: 'blue', img: 'Linear Formula.png' },
+            { id: 'exponential', name: 'Exponential Growth', color: 'amber', img: 'Exponential Formula.png' },
+            { id: 'logistic', name: 'Logistic Growth', color: 'purple', img: 'Logistic Formula.png' },
             { id: 'compound', name: 'Compound Interest', color: 'orange', img: 'Compound Formula.png' },
-            { id: 'grow', name: 'Growth', color: 'emerald', img: 'Grow Formula.png' },
-            { id: 'shrink', name: 'Shrinkage', color: 'rose', img: 'Shrink Formula.png' }
+            { id: 'grow', name: 'Savings Annuity', color: 'emerald', img: 'Grow Formula.png' },
+            { id: 'shrink', name: 'Loan/Payout Annuity', color: 'rose', img: 'Shrink Formula.png' }
         ];
 
         let currentRound = 1, attempts = 0, corrects = 0, isMuted = false;
