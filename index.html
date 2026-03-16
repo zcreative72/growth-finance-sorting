@@ -185,7 +185,7 @@
             const zone = document.createElement('div');
             zone.className = `drop-zone bg-slate-50 border-2 border-slate-200 p-4`;
             zone.dataset.category = c.id;
-            zone.innerHTML = `<img src="${encodeURIComponent(c.img)}" class="h-16 w-auto mb-2"><h3 class="font-bold text-slate-700 text-xs tracking-widest uppercase">${c.name}</h3><div class="content-area w-full flex flex-col items-center mt-2"></div>`;
+            zone.innerHTML = `<img src="${encodeURIComponent(c.img)}" class="w-full h-auto object-contain mb-2 px-2"><h3 class="font-bold text-slate-700 text-xs tracking-widest uppercase">${c.name}</h3><div class="content-area w-full flex flex-col items-center mt-2"></div>`;
             zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
             zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
             zone.addEventListener('drop', handleDrop);
