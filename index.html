@@ -10,16 +10,25 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; touch-action: none; user-select: none; }
         
-        /* Makes the draggable images fill more horizontal space */
+        /* Drag pool styling */
         .draggable-item { 
             transition: all 0.2s ease; 
             cursor: grab; 
-            width: 100%; /* Fill container width */
-            max-width: 600px; /* Prevent it from getting absurdly huge on ultrawide screens */
+            width: 100%; 
+            max-width: 700px;
+            display: block;
         }
         
         .draggable-item:active { cursor: grabbing; transform: scale(1.02); z-index: 50; }
-        .drop-zone { transition: all 0.3s ease; min-height: 180px; }
+        
+        .drop-zone { 
+            transition: all 0.3s ease; 
+            min-height: 200px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+        }
+        
         .drag-over { background-color: white !important; border-color: #3b82f6 !important; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         
         @keyframes success-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); background-color: #f0fdf4; } 100% { transform: scale(1); } }
@@ -28,11 +37,7 @@
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
         .incorrect-drop { animation: shake 0.3s ease-in-out; border-color: #ef4444 !important; }
 
-        /* Smaller images once dropped into categories */
-        .dropped-style {
-            width: 90% !important;
-            margin: 5px auto;
-        }
+        .dropped-style { width: 95% !important; margin: 8px auto; border: 1px solid #e2e8f0; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
@@ -54,8 +59,9 @@
             </div>
         </header>
 
-        <div id="image-pool" class="bg-slate-200/50 border-2 border-dashed border-slate-300 rounded-2xl p-6 mb-10 min-h-[250px] flex flex-col items-center gap-6">
-            </div>
+        <div id="image-pool" class="bg-slate-200/50 border-2 border-dashed border-slate-300 rounded-2xl p-6 mb-10 min-h-[300px] flex flex-col items-center gap-8">
+            <p class="text-slate-400 font-medium">Loading situations...</p>
+        </div>
 
         <div id="categories" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             </div>
@@ -77,6 +83,7 @@
     </div>
 
     <script>
+        // Use HTTPS for all Weebly assets to prevent Mixed Content blocking
         const items = [
             { id: 'i1', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-30-inbox_orig.png', cat: 'payout-loan' },
             { id: 'i2', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-44-inbox_orig.png', cat: 'exponential' },
@@ -119,11 +126,16 @@
 
         function init() {
             const container = document.getElementById('categories');
+            container.innerHTML = ''; // Clear loading text
             categories.forEach(c => {
                 const zone = document.createElement('div');
-                zone.className = `drop-zone bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 flex flex-col items-center`;
+                zone.className = `drop-zone bg-slate-50 border-2 border-slate-200 rounded-2xl p-4`;
                 zone.dataset.category = c.id;
-                zone.innerHTML = `<img src="${c.img}" class="h-16 w-auto mb-3"><h3 class="font-bold text-slate-700 text-xs tracking-widest uppercase">${c.name}</h3><div class="content-area w-full flex flex-col items-center mt-4"></div>`;
+                zone.innerHTML = `
+                    <img src="${c.img}" class="h-16 w-auto mb-3 pointer-events-none">
+                    <h3 class="font-bold text-slate-700 text-xs tracking-widest uppercase">${c.name}</h3>
+                    <div class="content-area w-full flex flex-col items-center mt-4"></div>
+                `;
                 zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
                 zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
                 zone.addEventListener('drop', handleDrop);
@@ -134,13 +146,24 @@
 
         function renderRound() {
             const pool = document.getElementById('image-pool');
-            pool.innerHTML = '';
+            pool.innerHTML = ''; // Clear loading text
             const roundItems = shuffled.slice((currentRound-1)*4, currentRound*4);
+            
             roundItems.forEach(item => {
                 const img = document.createElement('img');
-                img.src = item.src; img.id = item.id; img.dataset.category = item.cat; img.draggable = true;
+                img.src = item.src; 
+                img.id = item.id; 
+                img.dataset.category = item.cat; 
+                img.draggable = true;
                 img.className = 'draggable-item bg-white p-4 rounded-xl shadow-md border border-slate-200';
-                img.addEventListener('dragstart', e => e.dataTransfer.setData('text', e.target.id));
+                
+                // Native drag events
+                img.addEventListener('dragstart', e => {
+                    e.dataTransfer.setData('text', e.target.id);
+                    e.target.style.opacity = "0.5";
+                });
+                img.addEventListener('dragend', e => e.target.style.opacity = "1");
+                
                 pool.appendChild(img);
             });
             document.getElementById('round-counter').innerText = `Round ${currentRound} of 4`;
@@ -153,6 +176,7 @@
             const id = e.dataTransfer.getData('text');
             const el = document.getElementById(id);
             
+            if (!el) return;
             attempts++;
             
             if (el.dataset.category === zone.dataset.category) {
@@ -160,9 +184,12 @@
                 polySynth.triggerAttackRelease(["C4", "E4", "G4"], "8n");
                 zone.classList.add('correct-drop');
                 setTimeout(() => zone.classList.remove('correct-drop'), 400);
+                
                 zone.querySelector('.content-area').appendChild(el);
                 el.draggable = false;
                 el.classList.add('dropped-style');
+                el.style.opacity = "1";
+                
                 if (document.getElementById('image-pool').children.length === 0) showModal();
             } else {
                 new Tone.Synth().toDestination().triggerAttackRelease("G2", "8n");
@@ -192,7 +219,4 @@
             renderRound();
         };
 
-        init();
-    </script>
-</body>
-</html>
+        // Start the game
