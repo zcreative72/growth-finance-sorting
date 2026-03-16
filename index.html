@@ -13,7 +13,7 @@
         #image-pool {
             display: grid;
             grid-template-columns: repeat(1, minmax(0, 1fr));
-            gap: 1rem;
+            gap: 1.5rem;
             width: 100%;
         }
         @media (min-width: 768px) { #image-pool { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -47,7 +47,7 @@
 
     <div class="max-w-6xl mx-auto">
         <div class="flex justify-between items-center mb-6">
-            <span id="round-counter" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full font-bold text-sm shadow-sm">Round 1 of 5</span>
+            <span id="round-counter" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full font-bold text-sm shadow-sm">Round 1 of 4</span>
             <button id="mute-btn" class="flex items-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-bold text-sm transition-colors">
                 <span id="mute-icon">🔊</span> <span id="mute-text">Sound: ON</span>
             </button>
@@ -55,13 +55,9 @@
 
         <header class="text-center mb-8">
             <h1 class="text-4xl font-extrabold text-slate-800 tracking-tight">Financial Models Sorting</h1>
-            <div class="flex justify-center gap-4 mt-4">
-                <span class="bg-white border border-slate-200 text-slate-700 px-4 py-1 rounded-full font-bold text-sm shadow-sm">
-                    Accuracy: <span id="accuracy-display" class="text-indigo-600">100</span>%
-                </span>
-                <span class="bg-white border border-slate-200 text-slate-700 px-4 py-1 rounded-full font-bold text-sm shadow-sm">
-                    Attempts: <span id="attempts-display" class="text-indigo-600">0</span>
-                </span>
+            <div class="flex justify-center gap-4 mt-4 text-sm font-bold">
+                <span class="bg-white border px-4 py-1 rounded-full shadow-sm">Accuracy: <span id="accuracy-display" class="text-indigo-600">100</span>%</span>
+                <span class="bg-white border px-4 py-1 rounded-full shadow-sm">Attempts: <span id="attempts-display" class="text-indigo-600">0</span></span>
             </div>
         </header>
 
@@ -87,7 +83,7 @@
     </div>
 
     <script>
-        // Updated items with your uploaded file names
+        // Exact matches to the filenames in your GitHub folder
         const items = [
             { id: 'i1', src: 'Compound 1.png', cat: 'compound' },
             { id: 'i2', src: 'Compound 2.png', cat: 'compound' },
@@ -107,7 +103,6 @@
             { id: 'i16', src: 'Shrink 4.png', cat: 'shrink' }
         ];
 
-        // Updated categories with your uploaded formula names
         const categories = [
             { id: 'linear', name: 'Linear', color: 'blue', img: 'Linear Formula.png' },
             { id: 'exponential', name: 'Exponential', color: 'amber', img: 'Exponential Formula.png' },
@@ -121,8 +116,7 @@
         let shuffled = [...items].sort(() => Math.random() - 0.5);
         let polySynth, failSynth;
 
-        const muteBtn = document.getElementById('mute-btn');
-        muteBtn.onclick = () => {
+        document.getElementById('mute-btn').onclick = () => {
             isMuted = !isMuted;
             document.getElementById('mute-icon').innerText = isMuted ? '🔇' : '🔊';
             document.getElementById('mute-text').innerText = isMuted ? 'Sound: OFF' : 'Sound: ON';
@@ -141,7 +135,7 @@
             pool.innerHTML = '';
             shuffled.slice((currentRound-1)*4, currentRound*4).forEach(item => {
                 const img = document.createElement('img');
-                img.src = encodeURIComponent(item.src); // Handles spaces in filenames
+                img.src = encodeURIComponent(item.src); // Essential for filenames with spaces
                 img.id = item.id; img.dataset.category = item.cat; img.draggable = true;
                 img.className = 'draggable-item';
                 img.addEventListener('dragstart', e => {
