@@ -10,12 +10,20 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; touch-action: none; user-select: none; }
         
-        /* Drag pool styling */
+        /* Grid for the pool: 4 columns on large screens */
+        #image-pool {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 1.5rem;
+        }
+        @media (min-width: 768px) { #image-pool { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (min-width: 1024px) { #image-pool { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
         .draggable-item { 
             transition: all 0.2s ease; 
             cursor: grab; 
-            width: 100%; 
-            max-width: 700px;
+            width: 100%;
+            height: auto;
             display: block;
         }
         
@@ -43,6 +51,12 @@
 <body class="min-h-screen p-4 md:p-8">
 
     <div class="max-w-6xl mx-auto">
+        <div class="flex justify-end mb-2">
+            <button id="mute-btn" class="flex items-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-bold text-sm transition-colors">
+                <span id="mute-icon">🔊</span> <span id="mute-text">Sound: ON</span>
+            </button>
+        </div>
+
         <header class="text-center mb-8">
             <h1 class="text-4xl font-extrabold text-slate-800 tracking-tight">Financial Models Sorting</h1>
             
@@ -59,12 +73,11 @@
             </div>
         </header>
 
-        <div id="image-pool" class="bg-slate-200/50 border-2 border-dashed border-slate-300 rounded-2xl p-6 mb-10 min-h-[300px] flex flex-col items-center gap-8">
-            <p class="text-slate-400 font-medium">Loading situations...</p>
+        <div id="image-pool" class="bg-slate-200/50 border-2 border-dashed border-slate-300 rounded-2xl p-6 mb-10 min-h-[200px]">
+            <p class="text-slate-400 font-medium text-center col-span-full">Loading situations...</p>
         </div>
 
-        <div id="categories" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            </div>
+        <div id="categories" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>
 
     <div id="modal-container" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center hidden z-50">
@@ -83,7 +96,6 @@
     </div>
 
     <script>
-        // Use HTTPS for all Weebly assets to prevent Mixed Content blocking
         const items = [
             { id: 'i1', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-30-inbox_orig.png', cat: 'payout-loan' },
             { id: 'i2', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-44-inbox_orig.png', cat: 'exponential' },
@@ -115,8 +127,18 @@
         let currentRound = 1;
         let attempts = 0;
         let corrects = 0;
+        let isMuted = false;
         let shuffled = [...items].sort(() => Math.random() - 0.5);
         const polySynth = new Tone.PolySynth().toDestination();
+        const failSynth = new Tone.Synth().toDestination();
+
+        // Mute logic
+        document.getElementById('mute-btn').onclick = () => {
+            isMuted = !isMuted;
+            document.getElementById('mute-icon').innerText = isMuted ? '🔇' : '🔊';
+            document.getElementById('mute-text').innerText = isMuted ? 'Sound: OFF' : 'Sound: ON';
+            Tone.Destination.mute = isMuted;
+        };
 
         function updateScore() {
             document.getElementById('attempts-display').innerText = attempts;
@@ -126,7 +148,7 @@
 
         function init() {
             const container = document.getElementById('categories');
-            container.innerHTML = ''; // Clear loading text
+            container.innerHTML = ''; 
             categories.forEach(c => {
                 const zone = document.createElement('div');
                 zone.className = `drop-zone bg-slate-50 border-2 border-slate-200 rounded-2xl p-4`;
@@ -136,87 +158,4 @@
                     <h3 class="font-bold text-slate-700 text-xs tracking-widest uppercase">${c.name}</h3>
                     <div class="content-area w-full flex flex-col items-center mt-4"></div>
                 `;
-                zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-                zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-                zone.addEventListener('drop', handleDrop);
-                container.appendChild(zone);
-            });
-            renderRound();
-        }
-
-        function renderRound() {
-            const pool = document.getElementById('image-pool');
-            pool.innerHTML = ''; // Clear loading text
-            const roundItems = shuffled.slice((currentRound-1)*4, currentRound*4);
-            
-            roundItems.forEach(item => {
-                const img = document.createElement('img');
-                img.src = item.src; 
-                img.id = item.id; 
-                img.dataset.category = item.cat; 
-                img.draggable = true;
-                img.className = 'draggable-item bg-white p-4 rounded-xl shadow-md border border-slate-200';
-                
-                // Native drag events
-                img.addEventListener('dragstart', e => {
-                    e.dataTransfer.setData('text', e.target.id);
-                    e.target.style.opacity = "0.5";
-                });
-                img.addEventListener('dragend', e => e.target.style.opacity = "1");
-                
-                pool.appendChild(img);
-            });
-            document.getElementById('round-counter').innerText = `Round ${currentRound} of 4`;
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            const zone = e.target.closest('.drop-zone');
-            zone.classList.remove('drag-over');
-            const id = e.dataTransfer.getData('text');
-            const el = document.getElementById(id);
-            
-            if (!el) return;
-            attempts++;
-            
-            if (el.dataset.category === zone.dataset.category) {
-                corrects++;
-                polySynth.triggerAttackRelease(["C4", "E4", "G4"], "8n");
-                zone.classList.add('correct-drop');
-                setTimeout(() => zone.classList.remove('correct-drop'), 400);
-                
-                zone.querySelector('.content-area').appendChild(el);
-                el.draggable = false;
-                el.classList.add('dropped-style');
-                el.style.opacity = "1";
-                
-                if (document.getElementById('image-pool').children.length === 0) showModal();
-            } else {
-                new Tone.Synth().toDestination().triggerAttackRelease("G2", "8n");
-                zone.classList.add('incorrect-drop');
-                setTimeout(() => zone.classList.remove('incorrect-drop'), 400);
-            }
-            updateScore();
-        }
-
-        function showModal() {
-            const container = document.getElementById('modal-container');
-            container.classList.remove('hidden');
-            if (currentRound < 4) {
-                document.getElementById('round-modal').classList.remove('hidden');
-            } else {
-                const accuracy = Math.round((corrects / attempts) * 100);
-                document.getElementById('final-stats').innerText = `Final Accuracy: ${accuracy}% (${attempts} attempts)`;
-                document.getElementById('final-modal').classList.remove('hidden');
-            }
-        }
-
-        document.getElementById('next-btn').onclick = () => {
-            currentRound++;
-            document.getElementById('modal-container').classList.add('hidden');
-            document.getElementById('round-modal').classList.add('hidden');
-            document.querySelectorAll('.content-area').forEach(c => c.innerHTML = '');
-            renderRound();
-        };
-
-        // Start the game
+                zone.addEventListener('dragover', e => { e
