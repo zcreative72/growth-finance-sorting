@@ -4,14 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Financial Models Sorting Game</title>
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; touch-action: none; user-select: none; }
         
-        /* 4-Column Grid for Desktop */
         #image-pool {
             display: grid;
             grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -27,29 +25,29 @@
             width: 100%;
             border: 1px solid #e2e8f0;
             background: white;
-            padding: 8px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgb(0 0 0 / 0.05);
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
         
         .draggable-item:active { cursor: grabbing; transform: scale(1.02); z-index: 50; }
-        .drop-zone { transition: all 0.3s ease; min-height: 180px; display: flex; flex-direction: column; align-items: center; border-radius: 1rem; }
-        .drag-over { background-color: white !important; border-color: #3b82f6 !important; transform: translateY(-2px); box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); }
+        .drop-zone { transition: all 0.3s ease; min-height: 200px; display: flex; flex-direction: column; align-items: center; border-radius: 1rem; }
+        .drag-over { background-color: white !important; border-color: #3b82f6 !important; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         
         @keyframes success-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); background-color: #f0fdf4; } 100% { transform: scale(1); } }
         .correct-drop { animation: success-pulse 0.4s ease-out; }
         
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
         .incorrect-drop { animation: shake 0.3s ease-in-out; border-color: #ef4444 !important; }
 
-        .dropped-style { width: 90% !important; margin: 4px auto; box-shadow: none; border: 1px solid #cbd5e1; pointer-events: none; }
+        .dropped-style { width: 95% !important; margin: 8px auto; box-shadow: none; border: 1px solid #cbd5e1; pointer-events: none; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
 
     <div class="max-w-6xl mx-auto">
         <div class="flex justify-between items-center mb-6">
-            <span id="round-counter" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full font-bold text-sm">Round 1 of 4</span>
+            <span id="round-counter" class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full font-bold text-sm shadow-sm">Round 1 of 5</span>
             <button id="mute-btn" class="flex items-center gap-2 bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-bold text-sm transition-colors">
                 <span id="mute-icon">🔊</span> <span id="mute-text">Sound: ON</span>
             </button>
@@ -57,13 +55,17 @@
 
         <header class="text-center mb-8">
             <h1 class="text-4xl font-extrabold text-slate-800 tracking-tight">Financial Models Sorting</h1>
-            <div class="flex justify-center gap-4 mt-4 text-sm font-bold">
-                <span class="bg-white border px-4 py-1 rounded-full shadow-sm">Accuracy: <span id="accuracy-display" class="text-indigo-600">100</span>%</span>
-                <span class="bg-white border px-4 py-1 rounded-full shadow-sm">Attempts: <span id="attempts-display" class="text-indigo-600">0</span></span>
+            <div class="flex justify-center gap-4 mt-4">
+                <span class="bg-white border border-slate-200 text-slate-700 px-4 py-1 rounded-full font-bold text-sm shadow-sm">
+                    Accuracy: <span id="accuracy-display" class="text-indigo-600">100</span>%
+                </span>
+                <span class="bg-white border border-slate-200 text-slate-700 px-4 py-1 rounded-full font-bold text-sm shadow-sm">
+                    Attempts: <span id="attempts-display" class="text-indigo-600">0</span>
+                </span>
             </div>
         </header>
 
-        <div id="image-pool-container" class="bg-slate-200/50 border-2 border-dashed border-slate-300 rounded-2xl p-6 mb-10 min-h-[150px]">
+        <div id="image-pool-container" class="bg-slate-200/50 border-2 border-dashed border-slate-300 rounded-2xl p-6 mb-10 min-h-[200px]">
             <div id="image-pool"></div>
         </div>
 
@@ -74,51 +76,53 @@
         <div id="round-modal" class="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-sm mx-4 hidden">
             <div class="text-5xl mb-4">🎉</div>
             <h3 class="text-2xl font-bold text-slate-800">Round Complete!</h3>
-            <button id="next-btn" class="mt-6 w-full py-3 bg-indigo-600 text-white font-bold rounded-xl">Next Round</button>
+            <button id="next-btn" class="mt-6 w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl">Next Round</button>
         </div>
         <div id="final-modal" class="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-sm mx-4 hidden">
             <div class="text-5xl mb-4">🏆</div>
             <h3 class="text-2xl font-bold text-slate-800">Mastery Achieved!</h3>
             <p id="final-stats" class="text-slate-600 mt-2 font-semibold"></p>
-            <button onclick="location.reload()" class="mt-6 w-full py-3 bg-emerald-600 text-white font-bold rounded-xl">Play Again</button>
+            <button onclick="location.reload()" class="mt-6 w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl">Play Again</button>
         </div>
     </div>
 
     <script>
-        // UPDATED: All links now explicitly use HTTPS
+        // Updated items with your uploaded file names
         const items = [
-            { id: 'i1', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-30-inbox_orig.png', cat: 'payout-loan' },
-            { id: 'i2', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-44-inbox_orig.png', cat: 'exponential' },
-            { id: 'i3', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-51-inbox_orig.png', cat: 'linear' },
-            { id: 'i4', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-56-inbox_orig.png', cat: 'payout-loan' },
-            { id: 'i5', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-04-inbox_orig.png', cat: 'compound-interest' },
-            { id: 'i6', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-12-inbox_orig.png', cat: 'exponential' },
-            { id: 'i7', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-19-inbox_orig.png', cat: 'payout-loan' },
-            { id: 'i8', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-28-inbox_orig.png', cat: 'exponential' },
-            { id: 'i9', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-38-inbox_orig.png', cat: 'linear' },
-            { id: 'i10', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-45-inbox_orig.png', cat: 'savings-annuity' },
-            { id: 'i11', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-52-inbox_orig.png', cat: 'logistic' },
-            { id: 'i12', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-59-inbox_orig.png', cat: 'compound-interest' },
-            { id: 'i13', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-09-52-inbox_orig.png', cat: 'linear' },
-            { id: 'i14', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-02-inbox_orig.png', cat: 'savings-annuity' },
-            { id: 'i15', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-14-inbox_orig.png', cat: 'payout-loan' },
-            { id: 'i16', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-23-inbox_orig.png', cat: 'linear' }
+            { id: 'i1', src: 'Compound 1.png', cat: 'compound' },
+            { id: 'i2', src: 'Compound 2.png', cat: 'compound' },
+            { id: 'i3', src: 'Compound 3.png', cat: 'compound' },
+            { id: 'i4', src: 'Exponential 1.png', cat: 'exponential' },
+            { id: 'i5', src: 'Exponential 2.png', cat: 'exponential' },
+            { id: 'i6', src: 'Exponential 3.png', cat: 'exponential' },
+            { id: 'i7', src: 'Grow 1.png', cat: 'grow' },
+            { id: 'i8', src: 'Linear 1.png', cat: 'linear' },
+            { id: 'i9', src: 'Linear 2.png', cat: 'linear' },
+            { id: 'i10', src: 'Linear 3.png', cat: 'linear' },
+            { id: 'i11', src: 'Linear 4.png', cat: 'linear' },
+            { id: 'i12', src: 'Logistic 1.png', cat: 'logistic' },
+            { id: 'i13', src: 'Shrink 1.png', cat: 'shrink' },
+            { id: 'i14', src: 'Shrink 2.png', cat: 'shrink' },
+            { id: 'i15', src: 'Shrink 3.png', cat: 'shrink' },
+            { id: 'i16', src: 'Shrink 4.png', cat: 'shrink' }
         ];
 
+        // Updated categories with your uploaded formula names
         const categories = [
-            { id: 'linear', name: 'Linear', color: 'blue', img: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-25-10-34-53-growth-models-and-finance-formulas-word_orig.png' },
-            { id: 'exponential', name: 'Exponential', color: 'amber', img: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-25-10-35-01-growth-models-and-finance-formulas-word_orig.png' },
-            { id: 'logistic', name: 'Logistic', color: 'purple', img: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-25-10-35-08-growth-models-and-finance-formulas-word_orig.png' },
-            { id: 'compound-interest', name: 'Compound Interest', color: 'orange', img: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-25-10-35-22-growth-models-and-finance-formulas-word_orig.png' },
-            { id: 'savings-annuity', name: 'Savings Annuity', color: 'emerald', img: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-25-10-35-32-growth-models-and-finance-formulas-word_orig.png' },
-            { id: 'payout-loan', name: 'Payout Annuity/Loan', color: 'rose', img: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-25-10-35-42-growth-models-and-finance-formulas-word_orig.png' }
+            { id: 'linear', name: 'Linear', color: 'blue', img: 'Linear Formula.png' },
+            { id: 'exponential', name: 'Exponential', color: 'amber', img: 'Exponential Formula.png' },
+            { id: 'logistic', name: 'Logistic', color: 'purple', img: 'Logistic Formula.png' },
+            { id: 'compound', name: 'Compound Interest', color: 'orange', img: 'Compound Formula.png' },
+            { id: 'grow', name: 'Growth', color: 'emerald', img: 'Grow Formula.png' },
+            { id: 'shrink', name: 'Shrinkage', color: 'rose', img: 'Shrink Formula.png' }
         ];
 
         let currentRound = 1, attempts = 0, corrects = 0, isMuted = false;
         let shuffled = [...items].sort(() => Math.random() - 0.5);
         let polySynth, failSynth;
 
-        document.getElementById('mute-btn').onclick = () => {
+        const muteBtn = document.getElementById('mute-btn');
+        muteBtn.onclick = () => {
             isMuted = !isMuted;
             document.getElementById('mute-icon').innerText = isMuted ? '🔇' : '🔊';
             document.getElementById('mute-text').innerText = isMuted ? 'Sound: OFF' : 'Sound: ON';
@@ -137,7 +141,8 @@
             pool.innerHTML = '';
             shuffled.slice((currentRound-1)*4, currentRound*4).forEach(item => {
                 const img = document.createElement('img');
-                img.src = item.src; img.id = item.id; img.dataset.category = item.cat; img.draggable = true;
+                img.src = encodeURIComponent(item.src); // Handles spaces in filenames
+                img.id = item.id; img.dataset.category = item.cat; img.draggable = true;
                 img.className = 'draggable-item';
                 img.addEventListener('dragstart', e => {
                     initAudio();
@@ -181,14 +186,27 @@
             document.getElementById('accuracy-display').innerText = Math.round((corrects / attempts) * 100);
         }
 
-        // Setup categories
         const catContainer = document.getElementById('categories');
         categories.forEach(c => {
             const zone = document.createElement('div');
             zone.className = `drop-zone bg-slate-50 border-2 border-slate-200 p-4`;
             zone.dataset.category = c.id;
-            zone.innerHTML = `<img src="${c.img}" class="h-16 w-auto mb-2"><h3 class="font-bold text-slate-700 text-xs tracking-widest uppercase">${c.name}</h3><div class="content-area w-full flex flex-col items-center mt-2"></div>`;
+            zone.innerHTML = `<img src="${encodeURIComponent(c.img)}" class="h-16 w-auto mb-2"><h3 class="font-bold text-slate-700 text-xs tracking-widest uppercase">${c.name}</h3><div class="content-area w-full flex flex-col items-center mt-2"></div>`;
             zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
             zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
             zone.addEventListener('drop', handleDrop);
             catContainer.appendChild(zone);
+        });
+
+        document.getElementById('next-btn').onclick = () => {
+            currentRound++;
+            document.getElementById('modal-container').classList.add('hidden');
+            document.getElementById('round-modal').classList.add('hidden');
+            document.querySelectorAll('.content-area').forEach(c => c.innerHTML = '');
+            renderRound();
+        };
+
+        renderRound();
+    </script>
+</body>
+</html>
