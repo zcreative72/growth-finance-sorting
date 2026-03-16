@@ -8,56 +8,30 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; touch-action: none; user-select: none; }
         
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-            touch-action: none;
-            user-select: none;
+        /* Makes the draggable images fill more horizontal space */
+        .draggable-item { 
+            transition: all 0.2s ease; 
+            cursor: grab; 
+            width: 100%; /* Fill container width */
+            max-width: 600px; /* Prevent it from getting absurdly huge on ultrawide screens */
         }
+        
+        .draggable-item:active { cursor: grabbing; transform: scale(1.02); z-index: 50; }
+        .drop-zone { transition: all 0.3s ease; min-height: 180px; }
+        .drag-over { background-color: white !important; border-color: #3b82f6 !important; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        
+        @keyframes success-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); background-color: #f0fdf4; } 100% { transform: scale(1); } }
+        .correct-drop { animation: success-pulse 0.4s ease-out; }
+        
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+        .incorrect-drop { animation: shake 0.3s ease-in-out; border-color: #ef4444 !important; }
 
-        .draggable-item {
-            transition: all 0.2s ease;
-            cursor: grab;
-        }
-
-        .draggable-item:active {
-            cursor: grabbing;
-            transform: scale(1.1);
-            z-index: 50;
-        }
-
-        .drop-zone {
-            transition: all 0.3s ease;
-            min-height: 180px;
-        }
-
-        .drag-over {
-            background-color: white !important;
-            border-color: #3b82f6 !important;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-
-        @keyframes success-pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); background-color: #f0fdf4; }
-            100% { transform: scale(1); }
-        }
-
-        .correct-drop {
-            animation: success-pulse 0.4s ease-out;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-8px); }
-            75% { transform: translateX(8px); }
-        }
-
-        .incorrect-drop {
-            animation: shake 0.3s ease-in-out;
-            border-color: #ef4444 !important;
+        /* Smaller images once dropped into categories */
+        .dropped-style {
+            width: 90% !important;
+            margin: 5px auto;
         }
     </style>
 </head>
@@ -66,15 +40,21 @@
     <div class="max-w-6xl mx-auto">
         <header class="text-center mb-8">
             <h1 class="text-4xl font-extrabold text-slate-800 tracking-tight">Financial Models Sorting</h1>
-            <div class="flex items-center justify-center gap-4 mt-3">
-                <span id="round-counter" class="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold text-sm">
-                    Round 1 of 4
-                </span>
+            
+            <div class="flex flex-wrap items-center justify-center gap-4 mt-4">
+                <span id="round-counter" class="bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full font-bold text-sm shadow-sm">Round 1 of 4</span>
+                <div class="flex gap-2">
+                    <span class="bg-white border border-slate-200 text-slate-700 px-4 py-1 rounded-full font-bold text-sm shadow-sm">
+                        Accuracy: <span id="accuracy-display" class="text-indigo-600">100</span>%
+                    </span>
+                    <span class="bg-white border border-slate-200 text-slate-700 px-4 py-1 rounded-full font-bold text-sm shadow-sm">
+                        Attempts: <span id="attempts-display" class="text-indigo-600">0</span>
+                    </span>
+                </div>
             </div>
-            <p class="text-slate-500 mt-2">Identify the correct mathematical model for each scenario.</p>
         </header>
 
-        <div id="image-pool" class="bg-slate-200/50 border-2 border-dashed border-slate-300 rounded-2xl p-6 mb-10 min-h-[220px] flex flex-wrap items-center justify-center gap-6">
+        <div id="image-pool" class="bg-slate-200/50 border-2 border-dashed border-slate-300 rounded-2xl p-6 mb-10 min-h-[250px] flex flex-col items-center gap-6">
             </div>
 
         <div id="categories" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -85,144 +65,22 @@
         <div id="round-modal" class="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-sm mx-4 hidden">
             <div class="text-5xl mb-4">🎉</div>
             <h3 class="text-2xl font-bold text-slate-800">Round Complete!</h3>
-            <p class="text-slate-600 mt-2">Excellent job. Ready for more?</p>
-            <button id="next-btn" class="mt-6 w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors">
-                Start Next Round
-            </button>
+            <button id="next-btn" class="mt-6 w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors">Start Next Round</button>
         </div>
 
         <div id="final-modal" class="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-sm mx-4 hidden">
             <div class="text-5xl mb-4">🏆</div>
             <h3 class="text-2xl font-bold text-slate-800">Mastery Achieved!</h3>
-            <p class="text-slate-600 mt-2">You've correctly categorized every financial model scenario.</p>
-            <button onclick="location.reload()" class="mt-6 w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors">
-                Play Again
-            </button>
+            <p id="final-stats" class="text-slate-600 mt-2 font-semibold"></p>
+            <button onclick="location.reload()" class="mt-6 w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-colors">Play Again</button>
         </div>
     </div>
 
     <script>
-        // Data Structure
         const items = [
             { id: 'i1', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-30-inbox_orig.png', cat: 'payout-loan' },
             { id: 'i2', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-44-inbox_orig.png', cat: 'exponential' },
             { id: 'i3', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-51-inbox_orig.png', cat: 'linear' },
             { id: 'i4', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-56-inbox_orig.png', cat: 'payout-loan' },
             { id: 'i5', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-04-inbox_orig.png', cat: 'compound-interest' },
-            { id: 'i6', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-12-inbox_orig.png', cat: 'exponential' },
-            { id: 'i7', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-19-inbox_orig.png', cat: 'payout-loan' },
-            { id: 'i8', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-28-inbox_orig.png', cat: 'exponential' },
-            { id: 'i9', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-38-inbox_orig.png', cat: 'linear' },
-            { id: 'i10', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-45-inbox_orig.png', cat: 'savings-annuity' },
-            { id: 'i11', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-52-inbox_orig.png', cat: 'logistic' },
-            { id: 'i12', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-11-59-inbox_orig.png', cat: 'compound-interest' },
-            { id: 'i13', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-09-52-inbox_orig.png', cat: 'linear' },
-            { id: 'i14', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-02-inbox_orig.png', cat: 'savings-annuity' },
-            { id: 'i15', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-14-inbox_orig.png', cat: 'payout-loan' },
-            { id: 'i16', src: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-24-13-10-23-inbox_orig.png', cat: 'linear' }
-        ];
-
-        const categories = [
-            { id: 'linear', name: 'Linear', color: 'blue', img: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-25-10-34-53-growth-models-and-finance-formulas-word_orig.png' },
-            { id: 'exponential', name: 'Exponential', color: 'amber', img: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-25-10-35-01-growth-models-and-finance-formulas-word_orig.png' },
-            { id: 'logistic', name: 'Logistic', color: 'purple', img: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-25-10-35-08-growth-models-and-finance-formulas-word_orig.png' },
-            { id: 'compound-interest', name: 'Compound Interest', color: 'orange', img: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-25-10-35-22-growth-models-and-finance-formulas-word_orig.png' },
-            { id: 'savings-annuity', name: 'Savings Annuity', color: 'emerald', img: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-25-10-35-32-growth-models-and-finance-formulas-word_orig.png' },
-            { id: 'payout-loan', name: 'Payout Annuity/Loan', color: 'rose', img: 'https://mathslcc.weebly.com/uploads/8/5/5/6/8556410/2025-06-25-10-35-42-growth-models-and-finance-formulas-word_orig.png' }
-        ];
-
-        let currentRound = 1;
-        let shuffled = [...items].sort(() => Math.random() - 0.5);
-        const polySynth = new Tone.PolySynth().toDestination();
-
-        // UI Builders
-        function init() {
-            const container = document.getElementById('categories');
-            categories.forEach(c => {
-                const zone = document.createElement('div');
-                zone.className = `drop-zone bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 flex flex-col items-center`;
-                zone.dataset.category = c.id;
-                zone.innerHTML = `
-                    <img src="${c.img}" class="h-20 w-auto object-contain mb-3 pointer-events-none">
-                    <h3 class="font-bold text-slate-700 text-sm uppercase tracking-widest">${c.name}</h3>
-                    <div class="content-area w-full flex flex-wrap gap-2 justify-center mt-4"></div>
-                `;
-                
-                zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-                zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-                zone.addEventListener('drop', handleDrop);
-                container.appendChild(zone);
-            });
-            renderRound();
-        }
-
-        function renderRound() {
-            const pool = document.getElementById('image-pool');
-            pool.innerHTML = '';
-            const roundItems = shuffled.slice((currentRound-1)*4, currentRound*4);
-            
-            roundItems.forEach(item => {
-                const img = document.createElement('img');
-                img.src = item.src;
-                img.id = item.id;
-                img.dataset.category = item.cat;
-                img.draggable = true;
-                img.className = 'draggable-item bg-white p-2 rounded-xl shadow-md border border-slate-200 w-44 h-auto';
-                img.addEventListener('dragstart', e => e.dataTransfer.setData('text', e.target.id));
-                pool.appendChild(img);
-            });
-            document.getElementById('round-counter').innerText = `Round ${currentRound} of 4`;
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            const zone = e.target.closest('.drop-zone');
-            zone.classList.remove('drag-over');
-            
-            const id = e.dataTransfer.getData('text');
-            const el = document.getElementById(id);
-            
-            if (el.dataset.category === zone.dataset.category) {
-                // Success
-                polySynth.triggerAttackRelease(["C4", "E4", "G4"], "8n");
-                zone.classList.add('correct-drop');
-                setTimeout(() => zone.classList.remove('correct-drop'), 400);
-                
-                zone.querySelector('.content-area').appendChild(el);
-                el.draggable = false;
-                el.classList.replace('w-44', 'w-24');
-                el.classList.remove('cursor-grab');
-
-                if (document.getElementById('image-pool').children.length === 0) {
-                    showModal();
-                }
-            } else {
-                // Failure
-                new Tone.Synth().toDestination().triggerAttackRelease("G2", "8n");
-                zone.classList.add('incorrect-drop');
-                setTimeout(() => zone.classList.remove('incorrect-drop'), 400);
-            }
-        }
-
-        function showModal() {
-            const container = document.getElementById('modal-container');
-            container.classList.remove('hidden');
-            if (currentRound < 4) {
-                document.getElementById('round-modal').classList.remove('hidden');
-            } else {
-                document.getElementById('final-modal').classList.remove('hidden');
-            }
-        }
-
-        document.getElementById('next-btn').onclick = () => {
-            currentRound++;
-            document.getElementById('modal-container').classList.add('hidden');
-            document.getElementById('round-modal').classList.add('hidden');
-            document.querySelectorAll('.content-area').forEach(c => c.innerHTML = '');
-            renderRound();
-        };
-
-        init();
-    </script>
-</body>
-</html>
+            { id: 'i6', src: '
