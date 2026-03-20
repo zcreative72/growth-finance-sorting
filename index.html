@@ -14,8 +14,8 @@
         @media (min-width: 1024px) { #image-pool { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
         .draggable-item { transition: all 0.2s ease; cursor: grab; width: 100%; border: 1px solid #e2e8f0; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
         .draggable-item:active { cursor: grabbing; transform: scale(1.02); z-index: 50; }
-        .drop-zone { transition: all 0.3s ease; min-height: 200px; display: flex; flex-direction: column; align-items: center; border-radius: 1rem; }
-        .drag-over { background-color: white !important; border-color: #3b82f6 !important; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .drop-zone { transition: all 0.3s ease; min-height: 220px; display: flex; flex-direction: column; align-items: center; border-radius: 1rem; padding: 1rem; border: 2px solid #e2e8f0; background-color: #f1f5f9; }
+        .drag-over { background-color: #ffffff !important; border-color: #3b82f6 !important; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         @keyframes success-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); background-color: #f0fdf4; } 100% { transform: scale(1); } }
         .correct-drop { animation: success-pulse 0.4s ease-out; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
@@ -38,7 +38,7 @@
                 <span class="bg-white border px-4 py-1 rounded-full shadow-sm">Attempts: <span id="attempts-display" class="text-indigo-600">0</span></span>
             </div>
         </header>
-        <div id="image-pool-container" class="bg-slate-200/50 border-2 border-dashed border-slate-300 rounded-2xl p-6 mb-10 min-h-[200px]">
+        <div id="image-pool-container" class="bg-slate-200/50 border-2 border-dashed border-slate-300 rounded-2xl p-6 mb-10 min-h-[220px]">
             <div id="image-pool"></div>
         </div>
         <div id="categories" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
@@ -60,33 +60,22 @@
 
     <script>
         const items = [
-            // Category 'compound' = Compound Interest (Fixed: i1 is now compound)
             { id: 'i1', src: 'Compound 1.png', cat: 'compound' }, 
-            { id: 'i3', src: 'Compound 3.png', cat: 'compound' },
-
-            // Category 'savings' = Savings Annuity
             { id: 'i2', src: 'Growth 2.png', cat: 'savings' }, 
-            { id: 'i7', src: 'Grow 1.png', cat: 'savings' },
-            
-            // Category 'payout' = Loan/Payout Annuity
-            { id: 'i13', src: 'Shrink 1.png', cat: 'payout' }, 
-            { id: 'i14', src: 'Shrink 2.png', cat: 'payout' }, 
-            { id: 'i15', src: 'Shrink 3.png', cat: 'payout' }, 
-            { id: 'i16', src: 'Shrink 4.png', cat: 'payout' },
-
-            // Category 'exponential' = Exponential
+            { id: 'i3', src: 'Compound 3.png', cat: 'compound' },
             { id: 'i4', src: 'Exponential 1.png', cat: 'exponential' },
             { id: 'i5', src: 'Exponential 2.png', cat: 'exponential' },
             { id: 'i6', src: 'Exponential 3.png', cat: 'exponential' },
-
-            // Category 'linear' = Linear
+            { id: 'i7', src: 'Grow 1.png', cat: 'savings' },
             { id: 'i8', src: 'Linear 1.png', cat: 'linear' },
             { id: 'i9', src: 'Linear 2.png', cat: 'linear' },
             { id: 'i10', src: 'Linear 3.png', cat: 'linear' },
             { id: 'i11', src: 'Linear 4.png', cat: 'linear' },
-
-            // Category 'logistic' = Logistic
-            { id: 'i12', src: 'Logistic 1.png', cat: 'logistic' }
+            { id: 'i12', src: 'Logistic 1.png', cat: 'logistic' },
+            { id: 'i13', src: 'Shrink 1.png', cat: 'payout' },
+            { id: 'i14', src: 'Shrink 2.png', cat: 'payout' },
+            { id: 'i15', src: 'Shrink 3.png', cat: 'payout' },
+            { id: 'i16', src: 'Shrink 4.png', cat: 'payout' }
         ];
 
         const categories = [
@@ -119,11 +108,22 @@
         function renderRound() {
             const pool = document.getElementById('image-pool');
             pool.innerHTML = '';
-            shuffled.slice((currentRound-1)*4, currentRound*4).forEach(item => {
+            const roundItems = shuffled.slice((currentRound-1)*4, currentRound*4);
+            
+            roundItems.forEach(item => {
                 const img = document.createElement('img');
-                img.src = encodeURIComponent(item.src);
-                img.id = item.id; img.dataset.category = item.cat; img.draggable = true;
+                // Use relative pathing directly
+                img.src = item.src; 
+                img.id = item.id; 
+                img.dataset.category = item.cat; 
+                img.draggable = true;
                 img.className = 'draggable-item';
+                
+                img.onerror = function() {
+                    console.error("Failed to load image: " + item.src);
+                    this.src = 'https://via.placeholder.com/150?text=Image+Not+Found';
+                };
+
                 img.addEventListener('dragstart', e => {
                     initAudio();
                     e.dataTransfer.setData('text', e.target.id);
@@ -139,7 +139,8 @@
             e.preventDefault();
             const zone = e.target.closest('.drop-zone');
             zone.classList.remove('drag-over');
-            const el = document.getElementById(e.dataTransfer.getData('text'));
+            const elId = e.dataTransfer.getData('text');
+            const el = document.getElementById(elId);
             if (!el) return;
             attempts++;
             
@@ -149,14 +150,19 @@
                 zone.classList.add('correct-drop');
                 setTimeout(() => zone.classList.remove('correct-drop'), 400);
                 zone.querySelector('.content-area').appendChild(el);
-                el.draggable = false; el.classList.add('dropped-style');
+                el.draggable = false; 
+                el.classList.add('dropped-style');
+                
                 if (document.getElementById('image-pool').children.length === 0) {
-                    document.getElementById('modal-container').classList.remove('hidden');
-                    if (currentRound < 4) document.getElementById('round-modal').classList.remove('hidden');
-                    else {
-                        document.getElementById('final-stats').innerText = `Accuracy: ${Math.round((corrects / attempts) * 100)}%`;
-                        document.getElementById('final-modal').classList.remove('hidden');
-                    }
+                    setTimeout(() => {
+                        document.getElementById('modal-container').classList.remove('hidden');
+                        if (currentRound < 4) {
+                            document.getElementById('round-modal').classList.remove('hidden');
+                        } else {
+                            document.getElementById('final-stats').innerText = `Accuracy: ${Math.round((corrects / attempts) * 100)}%`;
+                            document.getElementById('final-modal').classList.remove('hidden');
+                        }
+                    }, 500);
                 }
             } else {
                 if (!isMuted) failSynth.triggerAttackRelease("G2", "8n");
@@ -170,9 +176,13 @@
         const catContainer = document.getElementById('categories');
         categories.forEach(c => {
             const zone = document.createElement('div');
-            zone.className = `drop-zone bg-slate-50 border-2 border-slate-200 p-4`;
+            zone.className = `drop-zone`;
             zone.dataset.category = c.id;
-            zone.innerHTML = `<img src="${encodeURIComponent(c.img)}" class="w-full h-auto object-contain mb-2 px-2"><h3 class="font-bold text-slate-700 text-xs tracking-widest uppercase">${c.name}</h3><div class="content-area w-full flex flex-col items-center mt-2"></div>`;
+            zone.innerHTML = `
+                <img src="${c.img}" class="w-full h-auto object-contain mb-2 px-2">
+                <h3 class="font-bold text-slate-700 text-xs tracking-widest uppercase">${c.name}</h3>
+                <div class="content-area w-full flex flex-col items-center mt-2"></div>
+            `;
             zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
             zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
             zone.addEventListener('drop', handleDrop);
