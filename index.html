@@ -60,8 +60,11 @@
 
     <script>
         const items = [
-            // Category 'savings' = Savings Annuity
+            // Category 'compound' = Compound Interest (Fixed: i1 is now compound)
             { id: 'i1', src: 'Compound 1.png', cat: 'compound' }, 
+            { id: 'i3', src: 'Compound 3.png', cat: 'compound' },
+
+            // Category 'savings' = Savings Annuity
             { id: 'i2', src: 'Growth 2.png', cat: 'savings' }, 
             { id: 'i7', src: 'Grow 1.png', cat: 'savings' },
             
@@ -70,9 +73,6 @@
             { id: 'i14', src: 'Shrink 2.png', cat: 'payout' }, 
             { id: 'i15', src: 'Shrink 3.png', cat: 'payout' }, 
             { id: 'i16', src: 'Shrink 4.png', cat: 'payout' },
-
-            // Category 'compound' = Compound Interest
-            { id: 'i3', src: 'Compound 3.png', cat: 'compound' },
 
             // Category 'exponential' = Exponential
             { id: 'i4', src: 'Exponential 1.png', cat: 'exponential' },
@@ -143,7 +143,6 @@
             if (!el) return;
             attempts++;
             
-            // This is the core check: does the item's 'cat' match the zone's 'id'?
             if (el.dataset.category === zone.dataset.category) {
                 corrects++;
                 if (!isMuted) polySynth.triggerAttackRelease(["C4", "E4", "G4"], "8n");
@@ -171,4 +170,24 @@
         const catContainer = document.getElementById('categories');
         categories.forEach(c => {
             const zone = document.createElement('div');
-            zone.className = `drop-zone bg-slate-50 border-2 border-slate-200
+            zone.className = `drop-zone bg-slate-50 border-2 border-slate-200 p-4`;
+            zone.dataset.category = c.id;
+            zone.innerHTML = `<img src="${encodeURIComponent(c.img)}" class="w-full h-auto object-contain mb-2 px-2"><h3 class="font-bold text-slate-700 text-xs tracking-widest uppercase">${c.name}</h3><div class="content-area w-full flex flex-col items-center mt-2"></div>`;
+            zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+            zone.addEventListener('drop', handleDrop);
+            catContainer.appendChild(zone);
+        });
+
+        document.getElementById('next-btn').onclick = () => {
+            currentRound++;
+            document.getElementById('modal-container').classList.add('hidden');
+            document.getElementById('round-modal').classList.add('hidden');
+            document.querySelectorAll('.content-area').forEach(c => c.innerHTML = '');
+            renderRound();
+        };
+
+        renderRound();
+    </script>
+</body>
+</html>
