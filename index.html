@@ -6,6 +6,24 @@
     <title>Financial Models Sorting Game</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    /* Mobile Alert Banner */
+        #mobile-alert {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: #4f46e5;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            z-index: 1000;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        /* Only show on screens smaller than 768px */
+        @media (max-width: 767px) {
+            #mobile-alert { display: block; }
+            body { padding-top: 50px; } /* Push content down so banner doesn't cover title */
+        }
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; touch-action: none; user-select: none; }
