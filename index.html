@@ -6,16 +6,50 @@
     <title>Financial Models Sorting Game</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
-       <style>
+    <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; touch-action: none; user-select: none; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; 
+            user-select: none; 
+        }
         #image-pool { display: grid; grid-template-columns: repeat(1, minmax(0, 1fr)); gap: 1.5rem; width: 100%; }
         @media (min-width: 768px) { #image-pool { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
         @media (min-width: 1024px) { #image-pool { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-        .draggable-item { transition: all 0.2s ease; cursor: grab; width: 100%; border: 1px solid #e2e8f0; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .draggable-item { 
+            transition: transform 0.2s ease, opacity 0.2s ease; 
+            cursor: grab; 
+            width: 100%; 
+            border: 1px solid #e2e8f0; 
+            background: white; 
+            padding: 10px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); 
+        }
         .draggable-item:active { cursor: grabbing; transform: scale(1.02); z-index: 50; }
-        .drop-zone { transition: all 0.3s ease; min-height: 220px; display: flex; flex-direction: column; align-items: center; border-radius: 1rem; padding: 1rem; border: 2px solid #e2e8f0; background-color: #f1f5f9; }
-        .drag-over { background-color: #ffffff !important; border-color: #3b82f6 !important; transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .drop-zone { 
+            transition: all 0.3s ease; 
+            min-height: 220px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            border-radius: 1rem; 
+            padding: 1rem; 
+            border: 2px solid #e2e8f0; 
+            background-color: #f1f5f9; 
+        }
+        /* Prevent child elements inside the drop zone from stealing drag events */
+        .drop-zone > img,
+        .drop-zone > h3 {
+            pointer-events: none;
+            user-select: none;
+        }
+        .drag-over { 
+            background-color: #ffffff !important; 
+            border-color: #3b82f6 !important; 
+            transform: translateY(-2px); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+        }
         @keyframes success-pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); background-color: #f0fdf4; } 100% { transform: scale(1); } }
         .correct-drop { animation: success-pulse 0.4s ease-out; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
@@ -98,11 +132,37 @@
         };
 
         function initAudio() {
-            if (!polySynth) {
-                polySynth = new Tone.PolySynth().toDestination();
-                failSynth = new Tone.Synth().toDestination();
+            try {
+                if (typeof Tone !== 'undefined') {
+                    if (!polySynth) {
+                        polySynth = new Tone.PolySynth().toDestination();
+                        failSynth = new Tone.Synth().toDestination();
+                    }
+                    if (Tone.context.state !== 'running') {
+                        Tone.start();
+                    }
+                }
+            } catch (err) {
+                console.warn('Audio could not be initialized:', err);
             }
-            if (Tone.context.state !== 'running') Tone.start();
+        }
+
+        function playSuccessSound() {
+            if (isMuted) return;
+            try {
+                if (polySynth) polySynth.triggerAttackRelease(["C4", "E4", "G4"], "8n");
+            } catch (err) {
+                console.warn('Audio play error:', err);
+            }
+        }
+
+        function playFailSound() {
+            if (isMuted) return;
+            try {
+                if (failSynth) failSynth.triggerAttackRelease("G2", "8n");
+            } catch (err) {
+                console.warn('Audio play error:', err);
+            }
         }
 
         function renderRound() {
@@ -112,7 +172,6 @@
             
             roundItems.forEach(item => {
                 const img = document.createElement('img');
-                // Use relative pathing directly
                 img.src = item.src; 
                 img.id = item.id; 
                 img.dataset.category = item.cat; 
@@ -126,10 +185,17 @@
 
                 img.addEventListener('dragstart', e => {
                     initAudio();
-                    e.dataTransfer.setData('text', e.target.id);
-                    e.target.style.opacity = "0.4";
+                    e.dataTransfer.setData('text/plain', e.target.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                    setTimeout(() => {
+                        e.target.style.opacity = "0.4";
+                    }, 0);
                 });
-                img.addEventListener('dragend', e => e.target.style.opacity = "1");
+
+                img.addEventListener('dragend', e => {
+                    e.target.style.opacity = "1";
+                });
+
                 pool.appendChild(img);
             });
             document.getElementById('round-counter').innerText = `Round ${currentRound} of 4`;
@@ -137,18 +203,21 @@
 
         function handleDrop(e) {
             e.preventDefault();
-            const zone = e.target.closest('.drop-zone');
+            const zone = e.currentTarget;
             zone.classList.remove('drag-over');
-            const elId = e.dataTransfer.getData('text');
+
+            const elId = e.dataTransfer.getData('text/plain');
             const el = document.getElementById(elId);
             if (!el) return;
+
             attempts++;
             
             if (el.dataset.category === zone.dataset.category) {
                 corrects++;
-                if (!isMuted) polySynth.triggerAttackRelease(["C4", "E4", "G4"], "8n");
+                playSuccessSound();
                 zone.classList.add('correct-drop');
                 setTimeout(() => zone.classList.remove('correct-drop'), 400);
+
                 zone.querySelector('.content-area').appendChild(el);
                 el.draggable = false; 
                 el.classList.add('dropped-style');
@@ -165,10 +234,11 @@
                     }, 500);
                 }
             } else {
-                if (!isMuted) failSynth.triggerAttackRelease("G2", "8n");
+                playFailSound();
                 zone.classList.add('incorrect-drop');
                 setTimeout(() => zone.classList.remove('incorrect-drop'), 400);
             }
+
             document.getElementById('attempts-display').innerText = attempts;
             document.getElementById('accuracy-display').innerText = Math.round((corrects / attempts) * 100);
         }
@@ -179,12 +249,20 @@
             zone.className = `drop-zone`;
             zone.dataset.category = c.id;
             zone.innerHTML = `
-                <img src="${c.img}" class="w-full h-auto object-contain mb-2 px-2">
+                <img src="${c.img}" class="w-full h-auto object-contain mb-2 px-2" alt="${c.name} Formula">
                 <h3 class="font-bold text-slate-700 text-xs tracking-widest uppercase">${c.name}</h3>
                 <div class="content-area w-full flex flex-col items-center mt-2"></div>
             `;
-            zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-            zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+            zone.addEventListener('dragover', e => { 
+                e.preventDefault(); 
+                e.dataTransfer.dropEffect = 'move';
+                zone.classList.add('drag-over'); 
+            });
+            zone.addEventListener('dragleave', e => {
+                if (!zone.contains(e.relatedTarget)) {
+                    zone.classList.remove('drag-over');
+                }
+            });
             zone.addEventListener('drop', handleDrop);
             catContainer.appendChild(zone);
         });
